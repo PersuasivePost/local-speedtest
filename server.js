@@ -18,19 +18,31 @@ app.get("/ping", (req, res) => {
 
 // 3 Dummy Data Download
 app.get("/download", (req, res) => {
-  const fileSizeMB = 100;
+  const fileSizeMB = Math.max(1, parseInt(req.query.size, 10) || 100);
   const chunkSize = 1024 * 1024; // 1 MB
+  const totalChunks = fileSizeMB;
 
   const dummyChunk = Buffer.alloc(chunkSize, "a");
 
   res.setHeader("Content-Type", "application/octet-stream");
   res.setHeader("Content-Length", fileSizeMB * chunkSize);
 
-  for (let i = 0; i < fileSizeMB; i++) {
-    res.write(dummyChunk);
+  let sent = 0;
+
+  function sendNext() {
+    while (sent < totalChunks) {
+      const ok = res.write(dummyChunk);
+      sent++;
+      if (!ok) {
+        // downstream is congested; wait for drain before continuing
+        res.once("drain", sendNext);
+        return;
+      }
+    }
+    res.end();
   }
 
-  res.end();
+  sendNext();
 });
 
 // 4 Upload Endpoint
