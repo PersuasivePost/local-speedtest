@@ -45,6 +45,28 @@ app.get("/download", (req, res) => {
   sendNext();
 });
 
+// 3.5 Return server IP so clients can easily learn address to connect to
+app.get("/ip", (req, res) => {
+  const os = require("os");
+  const ifaces = os.networkInterfaces();
+  let found = null;
+  for (const name of Object.keys(ifaces)) {
+    for (const iface of ifaces[name]) {
+      // skip internal and non-IPv4
+      if (iface.internal || iface.family !== "IPv4") continue;
+      // prefer 192.168/10/172 ranges but pick first usable
+      if (!found) found = iface.address;
+      if (/^192\.168\.|^10\.|^172\./.test(iface.address)) {
+        found = iface.address;
+        break;
+      }
+    }
+    if (found) break;
+  }
+
+  res.json({ ip: found || "0.0.0.0" });
+});
+
 // 4 Upload Endpoint
 app.post("/upload", (req, res) => {
   let totalBytes = 0;
@@ -61,7 +83,8 @@ app.post("/upload", (req, res) => {
 
 // 5 Start Server
 app.listen(port, "0.0.0.0", () => {
-  console.log(`Speed Test Server is Running!`);
-  console.log(`Open on your mobile browser:`);
-  console.log(`http://[PC-IP-ADDRESS]:${port}`);
+  console.log(`Speed Test Server is Running on port ${port}!`);
+  console.log(
+    `Visit http://<your-pc-ip>:${port} from a phone on the same network.`
+  );
 });
