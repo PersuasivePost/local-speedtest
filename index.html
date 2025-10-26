@@ -139,6 +139,47 @@
       </div>
 
       <pre id="results"></pre>
+
+      <div id="analysisSection" style="display: none; margin-top: 1.5rem">
+        <h2>Network Analysis</h2>
+        <p>
+          Enter your internet speeds from fast.com or similar to get a detailed
+          analysis:
+        </p>
+        <div
+          style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap"
+        >
+          <label>
+            Internet Download (Mbps):
+            <input
+              type="number"
+              id="internetDl"
+              step="0.01"
+              placeholder="e.g. 100"
+            />
+          </label>
+          <label>
+            Internet Upload (Mbps):
+            <input
+              type="number"
+              id="internetUl"
+              step="0.01"
+              placeholder="e.g. 28"
+            />
+          </label>
+        </div>
+        <button id="generateAnalysis">Generate Analysis</button>
+        <div
+          id="analysis"
+          style="
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #cccccc;
+          "
+        ></div>
+      </div>
     </div>
     <script src="script.js"></script>
   </body>

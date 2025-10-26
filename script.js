@@ -6,6 +6,14 @@ const dlSpeedEl = document.getElementById("dlSpeed");
 const dlReceivedEl = document.getElementById("dlReceived");
 const pcIpEl = document.getElementById("pcIp");
 const copyIpButton = document.getElementById("copyIpButton");
+const analysisSection = document.getElementById("analysisSection");
+const generateAnalysisButton = document.getElementById("generateAnalysis");
+const internetDlInput = document.getElementById("internetDl");
+const internetUlInput = document.getElementById("internetUl");
+const analysisDiv = document.getElementById("analysis");
+
+let localDownloadSpeed = 0;
+let localUploadSpeed = 0;
 
 function log(message) {
   console.log(message);
@@ -91,6 +99,7 @@ async function startTest() {
       dlSpeedEl.textContent = `Speed: ${dlSpeedMbps} Mbps`;
       dlReceivedEl.textContent = `Received: ${formatBytes(bytesReceived)}`;
       log(`Download Speed: ${dlSpeedMbps} Mbps`);
+      localDownloadSpeed = parseFloat(dlSpeedMbps);
     }
 
     // Upload Test
@@ -111,15 +120,69 @@ async function startTest() {
       (ulTimeInSeconds * 1000 * 1000)
     ).toFixed(2);
     log(`Upload Speed: ${ulSpeedMbps} Mbps`);
+    localUploadSpeed = parseFloat(ulSpeedMbps);
   } catch (error) {
     log(`Error occurred: ${error.message}`);
   } finally {
     log("Test completed. ");
+    analysisSection.style.display = "block";
     startButton.disabled = false;
   }
 }
 
 startButton.onclick = startTest;
+
+generateAnalysisButton.onclick = generateAnalysis;
+
+function generateAnalysis() {
+  const internetDl = parseFloat(internetDlInput.value);
+  const internetUl = parseFloat(internetUlInput.value);
+  if (isNaN(internetDl) || isNaN(internetUl)) {
+    analysisDiv.innerHTML =
+      '<p style="color: red;">Please enter valid internet speeds.</p>';
+    return;
+  }
+
+  let analysis = "<h3>Network Analysis Report</h3>";
+
+  const dlBottleneck = localDownloadSpeed < internetDl ? "WiFi" : "Internet";
+  const ulBottleneck = localUploadSpeed < internetUl ? "WiFi" : "Internet";
+
+  analysis += `<p><strong>Your Results:</strong></p>`;
+  analysis += `<ul>`;
+  analysis += `<li>Local Download: ${localDownloadSpeed} Mbps</li>`;
+  analysis += `<li>Local Upload: ${localUploadSpeed} Mbps</li>`;
+  analysis += `<li>Internet Download: ${internetDl} Mbps</li>`;
+  analysis += `<li>Internet Upload: ${internetUl} Mbps</li>`;
+  analysis += `</ul>`;
+
+  if (dlBottleneck === "WiFi" && localDownloadSpeed < internetDl) {
+    analysis += `<p>🔴 <strong>Download Issue:</strong> Your WiFi is slower than your internet (${localDownloadSpeed} vs ${internetDl} Mbps). You're losing ${(
+      internetDl - localDownloadSpeed
+    ).toFixed(2)} Mbps!</p>`;
+  } else {
+    analysis += `<p>✅ <strong>Download:</strong> WiFi is fine (${localDownloadSpeed} Mbps, internet ${internetDl} Mbps).</p>`;
+  }
+
+  if (ulBottleneck === "WiFi" && localUploadSpeed < internetUl) {
+    analysis += `<p>🔴 <strong>Upload Issue:</strong> Your WiFi is slower than your internet (${localUploadSpeed} vs ${internetUl} Mbps).</p>`;
+  } else {
+    analysis += `<p>✅ <strong>Upload:</strong> WiFi is fine (${localUploadSpeed} Mbps, internet ${internetUl} Mbps).</p>`;
+  }
+
+  analysis += `<p><strong>Recommendations:</strong></p>`;
+  if (dlBottleneck === "WiFi" || ulBottleneck === "WiFi") {
+    analysis += `<ul>`;
+    analysis += `<li>Try switching to 5GHz WiFi band if available.</li>`;
+    analysis += `<li>Check for WiFi interference or move closer to router.</li>`;
+    analysis += `<li>Consider upgrading your router if it's old.</li>`;
+    analysis += `</ul>`;
+  } else {
+    analysis += `<p>Your WiFi is performing well! No issues detected.</p>`;
+  }
+
+  analysisDiv.innerHTML = analysis;
+}
 
 // helper: format bytes to human readable
 function formatBytes(bytes) {
